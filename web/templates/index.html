@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CC-ALL</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='sweetalert2.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='fontawesome/all.min.css') }}">
+</head>
+
+<body>
+    <div class="app-container">
+        <header class="app-header">
+            <img src="{{ url_for('static', filename='logo.svg') }}" alt="CC-ALL Logo" class="app-logo">
+            <div class="system-stats">
+                <span id="datetime" class="datetime-display"><i class="fas fa-calendar-alt"></i> <span id="date"></span>
+                    <i class="fas fa-clock"></i> <span id="time"></span></span>
+                <span class="face-counter"><i class="fas fa-user"></i> <span id="face-count">0</span></span>
+            </div>
+        </header>
+
+        <div class="main-content">
+            <section class="video-section">
+                <div class="video-container">
+                    <video id="video" autoplay playsinline muted></video>
+                    <canvas id="canvas"></canvas>
+                    <canvas id="capture-canvas" style="display:none;"></canvas>
+                </div>
+                <div class="video-controls">
+                    <button id="enroll-btn" class="btn btn-primary">
+                        <span class="btn-text">Enroll Face</span>
+                    </button>
+                    <button id="enroll-gait-btn" class="btn btn-primary">
+                        <span class="btn-text">Enroll Gait</span>
+                    </button>
+                    <button id="toggle-camera" class="btn btn-secondary btn-icon-only" title="Toggle Camera">
+                        <i class="fas fa-camera-rotate"></i>
+                    </button>
+                    <button id="logs-records-btn" class="btn btn-secondary btn-icon-only" title="Logs & Records">
+                        <i class="fas fa-database"></i>
+                    </button>
+                </div>
+            </section>
+
+            <aside class="sidebar">
+                <div class="sidebar-toggles">
+                    <button id="toggle-logs" class="toggle-btn active">
+                        <i class="fas fa-history"></i> <span>Logs</span>
+                    </button>
+                    <button id="toggle-users" class="toggle-btn">
+                        <i class="fas fa-users"></i> <span>Users</span>
+                    </button>
+                </div>
+
+                <section class="logs-section active">
+                    <div class="section-header">
+                        <h3>Recognition Logs</h3>
+                        <button id="clear-logs" class="btn-icon" title="Clear logs">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </div>
+                    <div class="logs-container">
+                        <ul id="recognition-logs" class="logs-list"></ul>
+                    </div>
+                </section>
+
+                <section class="users-section">
+                    <div class="section-header">
+                        <h3>Enrolled Users <span id="user-count" class="badge">0</span></h3>
+                        <button id="refresh-users" class="btn-icon" title="Refresh">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                    </div>
+                    <div class="search-box">
+                        <input type="text" id="search-user" placeholder="Search...">
+                        <i class="fas fa-search"></i>
+                    </div>
+                    <div class="users-list-container">
+                        <ul id="user-list" class="users-list">
+                            <li class="no-users">Loading users...</li>
+                        </ul>
+                    </div>
+                </section>
+            </aside>
+        </div>
+    </div>
+
+    <div id="enroll-panel" class="enroll-panel">
+        <div class="enroll-header">
+            <h2><i class="fas fa-user-plus"></i> Enroll Face</h2>
+            <button id="enroll-close-btn" class="btn-icon" title="Close">&times;</button>
+        </div>
+        <div class="enroll-form">
+            <input id="enroll-firstname" placeholder="First Name" autocomplete="off">
+            <input id="enroll-lastname" placeholder="Last Name" autocomplete="off">
+            <input id="enroll-role" placeholder="Role (optional)" autocomplete="off">
+            <div class="enroll-camera-container">
+                <video id="enroll-video" autoplay playsinline muted></video>
+                <canvas id="enroll-canvas"></canvas>
+                <div class="face-guide">
+                    <div class="guide-circle"></div>
+                    <div class="guide-text">Position face within circle</div>
+                </div>
+            </div>
+            <div class="enroll-capture-row">
+                <button id="capture-face-btn" class="btn btn-primary">
+                    <i class="fas fa-camera"></i> Capture
+                </button>
+                <label for="enroll-upload-btn" class="btn btn-primary enroll-upload-label">
+                    <i class="fas fa-upload"></i> Choose
+                    <input id="enroll-upload-btn" type="file" accept="image/*" multiple />
+                </label>
+                <span id="enroll-count">0/10</span>
+            </div>
+            <div id="enroll-thumbnails" class="enroll-thumbnails"></div>
+            <div class="enroll-form-buttons">
+                <button id="enroll-submit-btn" class="btn btn-primary" disabled>
+                    <i class="fas fa-save"></i> Enroll Face
+                </button>
+                <button id="enroll-cancel-btn" class="btn btn-secondary">
+                    <i class="fas fa-times"></i> Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="gait-enroll-panel" class="enroll-panel">
+        <div class="enroll-header">
+            <h2><i class="fas fa-walking"></i> Enroll Gait</h2>
+            <button id="gait-enroll-close-btn" class="btn-icon" title="Close">&times;</button>
+        </div>
+        <div class="enroll-form">
+            <input id="gait-enroll-firstname" placeholder="First Name" autocomplete="off">
+            <input id="gait-enroll-lastname" placeholder="Last Name" autocomplete="off">
+            <input id="gait-enroll-role" placeholder="Role (optional)" autocomplete="off">
+            <div class="enroll-camera-container">
+                <video id="gait-enroll-video" autoplay playsinline muted></video>
+                <canvas id="gait-enroll-canvas"></canvas>
+                <div class="gait-guide">
+                    <div class="guide-text">Walk naturally in front of the camera</div>
+                    <div class="gait-progress">
+                        <div class="progress-bar">
+                            <div class="progress-fill"></div>
+                        </div>
+                        <span class="progress-text">0%</span>
+                    </div>
+                </div>
+            </div>
+            <div class="enroll-capture-row">
+                <button id="start-gait-capture" class="btn btn-primary gait-control-btn">
+                    <i class="fas fa-play"></i> Record
+                </button>
+                <button id="stop-gait-capture" class="btn btn-danger gait-control-btn" style="display: none;">
+                    <i class="fas fa-stop"></i> Stop
+                </button>
+                <label for="gait-enroll-upload-btn" class="btn btn-primary enroll-upload-label gait-control-btn">
+                    <i class="fas fa-upload"></i> Choose
+                    <input id="gait-enroll-upload-btn" type="file" accept="video/*,image/*" multiple />
+                </label>
+            </div>
+            <div id="gait-file-preview" class="file-preview"></div>
+            <div class="gait-enroll-info">
+                <span id="gait-frames-count"></span>
+            </div>
+            <div class="enroll-form-buttons">
+                <button id="gait-enroll-submit" class="btn btn-primary" disabled>
+                    <i class="fas fa-save"></i> Enroll Gait
+                </button>
+                <button id="gait-enroll-cancel" class="btn btn-secondary">
+                    <i class="fas fa-times"></i> Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='sweetalert2.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+
+</html>
