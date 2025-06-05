@@ -1,4 +1,3 @@
-# Ignore environment folders
 env/
 venv/
 __pycache__/
